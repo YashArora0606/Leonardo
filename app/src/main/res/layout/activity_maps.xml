@@ -6,4 +6,25 @@
     android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapsActivity" />
+    tools:context=".MapsActivity">
+    <io.apptik.widget.MultiSlider
+        android:id="@+id/range_slider5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        thumbNumber="2"
+        stepsThumbsApart="5"
+        drawThumbsApart="true"
+
+        />
+    <io.apptik.widget.MultiSlider
+        android:id="@+id/range_slider6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        thumbNumber="2"
+        stepsThumbsApart="5"
+        drawThumbsApart="true"
+
+        />
+</fragment>

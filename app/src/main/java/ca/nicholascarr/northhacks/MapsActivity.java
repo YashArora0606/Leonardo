@@ -30,18 +30,49 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import io.apptik.widget.MultiSlider;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private HeatmapTileProvider mProvider;
+    private ArrayList<Point> points;
+    private double minAmount;
+    private double maxAmount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        points = new ArrayList<>();
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        MultiSlider multiSlider5 = (MultiSlider) findViewById(R.id.range_slider5);
+
+        multiSlider5.setOnThumbValueChangeListener(new MultiSlider.OnThumbValueChangeListener() {
+            @Override
+            public void onValueChanged(MultiSlider multiSlider,
+                                       MultiSlider.Thumb thumb,
+                                       int thumbIndex,
+                                       int value)
+            {
+                if (thumbIndex == 0) {
+                    minAmount = value * 10;
+                } else {
+                    maxAmount = value * 10;
+                }
+                ArrayList<LatLng> coordinates = new ArrayList<>();
+                coordinates.add(points.get(0).getLatLng());
+                for (Point point: points) {
+                    if (point.getAmount() > minAmount && point.getAmount() < maxAmount) {
+                        coordinates.add(point.getLatLng());
+                    }
+                }
+                addHeatMap(coordinates);
+            }
+        });
     }
 
 
@@ -59,10 +90,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Toronto and move the camera
-        LatLng toronto = new LatLng(44, -79);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(toronto));
+        LatLng toronto = new LatLng(43.5, -79.5);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(toronto, 10));
         try {
-            addHeatMap(readItems(R.raw.point_info));
+            addHeatMap(readItems(R.raw.point_info, 0, 1000));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -72,24 +103,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Get the data: latitude/longitude positions of police stations.
 
         // Create a heat map tile provider, passing it the latlngs of the police stations.
-        HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder()
+        mProvider = new HeatmapTileProvider.Builder()
                 .data(list)
                 .build();
         // Add a tile overlay to the map, using the heat map tile provider.
         mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
     }
 
-    private ArrayList<LatLng> readItems(int resource) throws JSONException {
-        ArrayList<LatLng> list = new ArrayList<LatLng>();
+    private ArrayList<LatLng> readItems(int resource, double min, double max) throws JSONException {
         InputStream inputStream = getResources().openRawResource(resource);
         String json = new Scanner(inputStream).useDelimiter("\\A").next();
         JSONArray array = new JSONArray(json);
+        ArrayList<LatLng> coordinates = new ArrayList<>();
         for (int i = 0; i < array.length(); i++) {
             JSONObject object = array.getJSONObject(i);
+            double amount = object.getDouble("amount");
             double lat = object.getDouble("latitude");
             double lng = object.getDouble("longitude");
-            list.add(new LatLng(lat, lng));
+            String merchant = object.getString("merchant");
+            Point point = new Point(lat, lng, amount, merchant);
+            points.add(point);
+            if (amount > min && amount < max) {
+                coordinates.add(point.getLatLng());
+            }
         }
-        return list;
+        return coordinates;
     }
 }
