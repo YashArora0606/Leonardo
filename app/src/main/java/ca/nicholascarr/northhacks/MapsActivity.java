@@ -107,6 +107,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .data(list)
                 .build();
         // Add a tile overlay to the map, using the heat map tile provider.
+
         mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
     }
 
